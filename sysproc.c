@@ -16,14 +16,16 @@ sys_fork(void)
 int
 sys_exit(void)
 {
-  exit();
+  exit(0);
   return 0;  // not reached
 }
 
 int
 sys_wait(void)
 {
-  return wait();
+  int *status;
+  argptr(0, (void*)&status, sizeof(status));//smth needs to be done here
+  return wait(status);
 }
 
 int
