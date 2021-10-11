@@ -24,7 +24,7 @@ int
 sys_wait(void)
 {
   int *status;
-  argptr(0, (void*)&status, sizeof(status));//smth needs to be done here
+  //smth needs to be done here
   return wait(status);
 }
 
