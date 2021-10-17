@@ -534,3 +534,47 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+int
+waitpid(int pid, int *status, int options)
+{
+  struct proc *p;
+  int havekids;
+  struct proc *curproc = myproc();
+  
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for exit children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid != pid)
+        continue;
+      havekids = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        // pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        freevm(p->pgdir);
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        p->state = UNUSED;
+	if(status){
+        *status = p->exitstatus;
+        }
+	p->exitstatus = 0;
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+    // No point in waiting if we don't have any children.
+    if(!havekids || curproc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+    // Wait for children to exit
+    sleep(curproc, &ptable.lock);  
+  }
+}
