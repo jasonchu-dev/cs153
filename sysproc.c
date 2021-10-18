@@ -24,7 +24,7 @@ int
 sys_wait(void)
 {
   int *status;
-  //smth needs to be done here
+  argptr(0, (void*)&status, sizeof(status));
   return wait(status);
 }
 
@@ -94,7 +94,7 @@ sys_uptime(void)
 
 int sys_waitpid(void)
 {
-  int pid, options;
+  int pid, options = 9;
   int* status;
   if(argint(0, &pid) < 0)
     return -1;
