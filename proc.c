@@ -260,7 +260,7 @@ exit(int status)
         wakeup1(initproc);
     }
   }
-
+  curproc->exitstatus = status;
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();
