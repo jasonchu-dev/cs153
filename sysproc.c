@@ -103,3 +103,11 @@ int sys_waitpid(void)
     return -1;
   return waitpid(pid, status, options);
 }
+
+int sys_changepriority(void)
+{
+  int new_priority;
+  if(argint(0, &new_priority) < 0)
+    return -1;
+  return changepriority(new_priority);
+}

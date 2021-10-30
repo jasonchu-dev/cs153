@@ -88,7 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+  
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -111,7 +111,7 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
-
+  p->priority = 10;
   return p;
 }
 
@@ -338,6 +338,19 @@ scheduler(void)
       if(p->state != RUNNABLE)
         continue;
 
+    // search for low priority and set that to main priority
+    for(p = ptable.proc; p < &ptable.proc[NPROC] - 1; p++){
+      if(p->state == RUNNABLE && (p-1)->priority < p->priority) 
+        p->priority = (p-1)->priority;
+    }
+
+    // if not low is not equal to main then decrement main
+    for(p = ptable.proc; p < &ptable.proc[NPROC] - 1; p++)
+    {
+      if((p-1)->priority != p->priority && p->priority > 0) // might have to put in other loop
+        p->priority--;
+    }
+
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -347,7 +360,7 @@ scheduler(void)
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
-
+      p->priority++; // might have to put on 355
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
@@ -577,4 +590,11 @@ waitpid(int pid, int *status, int options)
     // Wait for children to exit
     sleep(curproc, &ptable.lock);  
   }
+}
+
+int changepriority(int new_priority)
+{
+  struct proc *curproc = myproc();
+  curproc->priority = new_priority;
+  return 0;
 }
