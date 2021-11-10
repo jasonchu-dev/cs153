@@ -358,6 +358,7 @@ scheduler(void)
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
+      // if(p->priority < 20)
       p->priority++;
 
       for(j = ptable.proc; j < &ptable.proc[NPROC]; j++)
@@ -597,6 +598,9 @@ waitpid(int pid, int *status, int options)
 
 int changepriority(int new_priority)
 {
+  // if(new_priority < 0 || new_priority > 20)
+  //   return -1;
+
   struct proc *curproc = myproc();
 
   curproc->priority = new_priority;
