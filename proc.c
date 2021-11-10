@@ -324,7 +324,7 @@ wait(int *status)
 void
 scheduler(void)
 {
-  struct proc *p;
+  struct proc *p, *i, *j;
   struct cpu *c = mycpu();
   c->proc = 0;
   
@@ -339,17 +339,15 @@ scheduler(void)
         continue;
 
     // search for low priority and set that to main priority
-    for(p = ptable.proc; p < &ptable.proc[NPROC] - 1; p++){
-      if(p->state == RUNNABLE && (p-1)->priority < p->priority) 
-        p->priority = (p-1)->priority;
+    for(i = p + 1; i < &ptable.proc[NPROC]; i++){
+      if(i->state == RUNNABLE && (i->priority < p->priority)){
+        p = i;
+      }
     }
-
-    // if not low is not equal to main then decrement main
-    for(p = ptable.proc; p < &ptable.proc[NPROC] - 1; p++)
-    {
-      if((p-1)->priority != p->priority && p->priority > 0) // might have to put in other loop
-        p->priority--;
-    }
+    // for(p = ptable.proc + 1; p < &ptable.proc[NPROC]; p++){
+    //   if(p->state == RUNNABLE && p->priority < (p+1)->priority) 
+    //     (p+1)->priority = p->priority;
+    // }
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
@@ -360,10 +358,15 @@ scheduler(void)
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
-      p->priority++; // might have to put on 355
+      p->priority++;
+
+      for(j = ptable.proc; j < &ptable.proc[NPROC]; j++)
+        if(j != p && j->priority > 0)
+	        j->priority--;
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
+
     }
     release(&ptable.lock);
 
@@ -595,6 +598,7 @@ waitpid(int pid, int *status, int options)
 int changepriority(int new_priority)
 {
   struct proc *curproc = myproc();
+
   curproc->priority = new_priority;
   return 0;
 }
