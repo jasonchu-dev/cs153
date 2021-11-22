@@ -13,13 +13,20 @@ sys_fork(void)
   return fork();
 }
 
+// int
+// sys_exit(void)
+// {
+//   int status;
+//   if(argint(0, &status) < 0)
+//     return -1;
+//   exit(status);
+//   return 0;  // not reached
+// }
+
 int
 sys_exit(void)
 {
-  int status;
-  if(argint(0, &status) < 0)
-    return -1;
-  exit(status);
+  exit();
   return 0;  // not reached
 }
 
